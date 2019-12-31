@@ -1,0 +1,6 @@
+/sounds
+/textures
+/sprites
+/target
+**/*.rs.bk
+Cargo.lock

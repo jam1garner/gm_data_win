@@ -1,0 +1,18 @@
+[package]
+name = "gm_data_win"
+version = "0.1.0"
+authors = ["jam1garner <jam1.mcleod@hotmail.com>"]
+edition = "2018"
+
+[features]
+test = []
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "data_win_test"
+path = "src/main.rs"
+
+
+[dependencies]
+nom = "5"
+image = "0.22.3"
