@@ -8,6 +8,7 @@ mod audo;
 mod txtr;
 mod tpag;
 mod sprt;
+mod font;
 mod byte_parsers;
 
 pub use form_header::*;
@@ -92,6 +93,7 @@ use audo::Audo;
 use txtr::Txtr;
 use tpag::Tpag;
 use sprt::Sprt;
+use font::Font;
 
 define_sections!{
     Section,
@@ -103,6 +105,7 @@ define_sections!{
         (b"TXTR", Txtr, Txtr, _txtr),
         (b"TPAG", Tpag, Tpag, _tpag),
         (b"SPRT", Sprt, Sprt, _sprt),
+        (b"FONT", Font, Font, _font),
     }
 }
 
@@ -115,7 +118,17 @@ pub fn take_data_win_file(input: &[u8]) -> Vec<Section> {
     nom::multi::many0(Section::take)(input).unwrap().1
 }
 
-#[derive(Default, Debug)]
+//#[cfg(textures)]
+use {
+    image::{
+        DynamicImage,
+        GenericImageView
+    },
+    std::sync::Arc,
+    lazy_init::Lazy,
+};
+
+#[derive(Default)]
 pub struct FormFile {
     pub audos: Vec<Audo>,
     pub strg: Option<Strg>,
@@ -123,6 +136,9 @@ pub struct FormFile {
     pub txtr: Option<Txtr>,
     pub tpag: Option<Tpag>,
     pub sprt: Option<Sprt>,
+    pub font: Option<Font>,
+    //#[cfg(textures)]
+    pub textures: Vec<Lazy<Arc<DynamicImage>>>,
 }
 
 impl FormFile {
@@ -141,6 +157,7 @@ impl FormFile {
                     file.sond = Some(sond)
                 }
                 Section::Txtr(txtr) => {
+                    file.textures = (0..txtr.files.len()).map(|_| Lazy::new()).collect();
                     file.txtr = Some(txtr);
                 }
                 Section::Tpag(tpag) => {
@@ -149,10 +166,36 @@ impl FormFile {
                 Section::Sprt(sprt) => {
                     file.sprt = Some(sprt);
                 }
+                Section::Font(font) => {
+                    file.font = Some(font);
+                }
                 _ => {}
             }
         }
 
         file
+    }
+    
+    //#[cfg(textures)]
+    pub fn get_texture(&self, index: usize) -> Arc<DynamicImage> {
+        Arc::clone(self.textures[index].get_or_create(||{
+            println!("Loading texture {}...", index);
+            Arc::new(image::load_from_memory_with_format(
+                &self.txtr.as_ref().unwrap().files[index].png,
+                image::ImageFormat::PNG
+            ).unwrap())
+        }))
+    }
+
+    pub fn get_tpag_info(&self, loc: u32) -> (((u16, u16), (u16, u16)), usize) {
+        let tpag = self.tpag.as_ref().unwrap().get(loc).unwrap();
+        (tpag.sprite_bounds, tpag.texture_index as usize)
+    }
+
+    pub fn get_tpag_subimage(&self, loc: u32) -> image::ImageBuffer<image::Rgba<u8>, std::vec::Vec<u8>> {
+        let (((x, y), (w, h)), texture_index) = self.get_tpag_info(loc);
+        self.get_texture(texture_index).view(
+            x as u32, y as u32, w as u32, h as u32
+        ).to_image()
     }
 }

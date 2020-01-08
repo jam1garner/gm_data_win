@@ -2,6 +2,7 @@ use std::fs;
 use gm_data_win::take_data_win_file;
 use gm_data_win::file_structs::Section;
 use gm_data_win::file_structs::FormFile;
+use image::GenericImage;
 
 fn extension_from_magic(magic: &[u8]) -> &'static str {
     match magic {
@@ -63,60 +64,84 @@ fn main() {
                 //println!("Txtr = {:?}", txtr.files.iter().map(|a| (a.unk1, a.unk2)).collect::<Vec<_>>())
             }
 
-            a @ _ => {dbg!(a);}
+            a => {dbg!(a);}
         }
     }
 
     let file = FormFile::from_sections(a);
-    let strg = file.strg.as_ref().unwrap();
-    let sond = file.sond.as_ref().unwrap();
-    let txtr = file.txtr.as_ref().unwrap();
-    let sprt = file.sprt.as_ref().unwrap();
-    let tpag = file.tpag.as_ref().unwrap();
-    use std::collections::HashSet;
-    let mut values: HashSet<&[u8]> = HashSet::new();
-    //fs::create_dir("sounds");
-    for sound in &sond.sounds {
-        let name = sound.name_offset;
-        /*if sound.index_in_audiogroup == 0xFFFF_FFFF {
-            continue
+    if cfg!(feature = "sounds") {
+        let strg = file.strg.as_ref().unwrap();
+        let sond = file.sond.as_ref().unwrap();
+        let _ = fs::create_dir("sounds");
+        for sound in &sond.sounds {
+            let name = sound.name_offset;
+            if sound.index_in_audiogroup == 0xFFFF_FFFF {
+                continue
+            }
+            let file = &file.audos[sound.audiogroup_index as usize].files[sound.index_in_audiogroup as usize];
+            
+            let name = strg.get(name).unwrap();
+            
+            std::fs::write(
+                &format!(
+                    "sounds/{}.{}",
+                    name,
+                    extension_from_magic(&file[..4])
+                ),
+                file
+            ).unwrap();
         }
-        let file = &file.audos[sound.audiogroup_index as usize].files[sound.index_in_audiogroup as usize];
-        */
-        let name = strg.get(name).unwrap();
-        
-        //std::fs::write(&format!("sounds/{}.{}", name, extension_from_magic(&file[..4])), file);
-    }
-    dbg!(values);
-
-    let mut textures = vec![];
-
-    //fs::create_dir("textures");
-    for (i, texture) in txtr.files.iter().enumerate() {
-        //std::fs::write(&format!("textures/{}_{}.png", i, texture.unk1), &texture.png);
-        println!("Loading texture {}...", i);
-        textures.push(
-            image::load_from_memory_with_format(
-                &texture.png,
-                image::ImageFormat::PNG
-            ).unwrap()
-        );
     }
 
-    //fs::create_dir("sprites");
-    for sprite in &sprt.sprites {
-        let name = strg.get(sprite.name_offset).unwrap();
-        println!("Saving '{}'...", name);
-        let tpags = sprite.tpag_offsets.iter()
-                        .map(|&off| tpag.get(off).unwrap())
-                        .collect::<Vec<_>>();
-        fs::create_dir(&format!("sprites/{}", name));
-        for (i, tpag) in tpags.iter().enumerate() {
-            let ((x, y), (w, h)) = tpag.sprite_bounds;
-            let sprite = textures[tpag.texture_index as usize].crop(
-                x as u32, y as u32, w as u32, h as u32
-            );
-            sprite.save_with_format(&format!("sprites/{}/{}_{}.png", name, name, i), image::ImageFormat::PNG).unwrap();
+    if cfg!(feature = "textures") {
+        let txtr = file.txtr.as_ref().unwrap();
+        let _ = fs::create_dir("textures");
+        for (i, texture) in txtr.files.iter().enumerate() {
+            let _ = std::fs::write(&format!("textures/{}_{}.png", i, texture.unk1), &texture.png);
+        }
+    }
+
+    if cfg!(feature = "sprites") {
+        let sprt = file.sprt.as_ref().unwrap();
+        let strg = file.strg.as_ref().unwrap();
+        let _ = fs::create_dir("sprites");
+        for sprite in &sprt.sprites {
+            let name = strg.get(sprite.name_offset).unwrap();
+            println!("Saving '{}'...", name);
+            let _ = fs::create_dir(&format!("sprites/{}", name));
+            for (i, &tpag) in sprite.tpag_offsets.iter().enumerate() {
+                file.get_tpag_subimage(tpag)
+                    .save_with_format(
+                        &format!("sprites/{}/{}_{}.png", name, name, i),
+                        image::ImageFormat::PNG
+                    ).unwrap();
+            }
+        }
+    }
+
+    if cfg!(feature = "font") {
+        let strg = file.strg.as_ref().unwrap();
+        let font = file.font.as_ref().unwrap();
+        let _ = fs::create_dir("fonts");
+        for font in &font.fonts {
+            let name = strg.get(font.font_name).unwrap();
+            let alias = strg.get(font.name).unwrap();
+            println!("Saving font '{}' (alias: '{}')", name, alias);
+            let _ = fs::create_dir(&format!("fonts/{}", name));
+            let mut font_sheet = file.get_tpag_subimage(font.entire_font_tpag);
+            for font_char in &font.chars {
+                let ((x, y), (w, h)) = font_char.bounds;
+                if w == 0 {
+                    println!("Warning: font '{}', character '{}' is zero-width", name, font_char.character);
+                    continue
+                }
+                font_sheet.sub_image(
+                    x as _, y as _, w as _, h as _
+                ).to_image().save_with_format(
+                    &format!("fonts/{}/{}.png", name, font_char.character),
+                    image::ImageFormat::PNG
+                ).unwrap();
+            }
         }
     }
 }
