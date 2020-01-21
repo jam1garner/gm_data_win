@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Sprt {
     pub sprites: Vec<SprtEntry>,
     pub locations: HashMap<u32, usize>,
@@ -46,7 +46,7 @@ impl super::ParseSection for Sprt {
 type Rect32 = (Point32, Point32);
 type Point32 = (u32, u32);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SprtEntry {
     pub name_offset: u32,
     pub size: Point32,

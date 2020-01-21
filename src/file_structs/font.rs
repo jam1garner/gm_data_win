@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Font {
     pub fonts: Vec<FontEntry>,
     pub locations: HashMap<u32, usize>,
@@ -90,14 +90,14 @@ fn get_char_entry_at_offset(input: PosSlice, offset: u32) -> IResult<PosSlice, F
 type Rect16 = (Point16, Point16);
 type Point16 = (u16, u16);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FontChar {
     pub character: char,
     pub bounds: Rect16,
     pub origin: Point16,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FontEntry {
     pub name: u32,
     pub font_name: u32,

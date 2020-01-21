@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Sond {
     pub sounds: Vec<SondEntry>,
     pub locations: HashMap<u32, usize>,
@@ -43,7 +43,7 @@ impl super::ParseSection for Sond {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SondEntry {
     pub name_offset: u32,
     pub unk1: u32, // Always zero

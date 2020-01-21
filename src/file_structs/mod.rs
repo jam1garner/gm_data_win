@@ -1,6 +1,5 @@
 mod track_slice;
 mod section_header;
-mod form_header;
 mod gen8;
 mod strg;
 mod sond;
@@ -9,9 +8,9 @@ mod txtr;
 mod tpag;
 mod sprt;
 mod font;
+mod agrp;
 mod byte_parsers;
 
-pub use form_header::*;
 use section_header::{take_section, ParseSection};
 use nom::IResult;
 use track_slice::PosSlice;
@@ -26,7 +25,7 @@ macro_rules! define_sections {
             $(,)?
         }
     ) => {
-        #[derive(Debug)]
+        #[derive(Debug, Clone)]
         pub enum $enum_name {
             $(
                 $section($section_inner),
@@ -86,14 +85,15 @@ macro_rules! define_sections {
     }
 }
 
-use gen8::Gen8;
-use strg::Strg;
-use sond::Sond;
-use audo::Audo;
-use txtr::Txtr;
-use tpag::Tpag;
-use sprt::Sprt;
-use font::Font;
+pub use gen8::*;
+pub use strg::*;
+pub use sond::*;
+pub use audo::*;
+pub use txtr::*;
+pub use tpag::*;
+pub use sprt::*;
+pub use font::*;
+pub use agrp::*;
 
 define_sections!{
     Section,
@@ -106,6 +106,7 @@ define_sections!{
         (b"TPAG", Tpag, Tpag, _tpag),
         (b"SPRT", Sprt, Sprt, _sprt),
         (b"FONT", Font, Font, _font),
+        (b"AGRP", Agrp, Agrp, _agrp),
     }
 }
 
@@ -137,6 +138,7 @@ pub struct FormFile {
     pub tpag: Option<Tpag>,
     pub sprt: Option<Sprt>,
     pub font: Option<Font>,
+    pub agrp: Option<Agrp>,
     //#[cfg(textures)]
     pub textures: Vec<Lazy<Arc<DynamicImage>>>,
 }
@@ -197,5 +199,21 @@ impl FormFile {
         self.get_texture(texture_index).view(
             x as u32, y as u32, w as u32, h as u32
         ).to_image()
+    }
+
+    pub fn get_tpag_from_name_and_frame(&self, sprite_name: &str, frame: usize) -> Option<(((u16, u16), (u16, u16)), usize)> {
+        let offset = self.name_to_offset(sprite_name)? as u32;
+
+        Some(self.get_tpag_info(
+            self.sprt.as_ref().unwrap().sprites.iter().find(
+                |sprite| sprite.name_offset == offset
+            )?.tpag_offsets.get(frame).copied()?
+        ))
+    }
+
+    pub fn name_to_offset(&self, name: &str) -> Option<u32> {
+        let strg = self.strg.as_ref().unwrap();
+        let index = strg.strings.iter().position(|string| string == name)?;
+        strg.locations.get_by_right(&index).copied()
     }
 }

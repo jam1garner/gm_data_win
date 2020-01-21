@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Gen8 {
     window_size: (u32, u32),
     game_name_offset: u32,

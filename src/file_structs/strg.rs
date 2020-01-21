@@ -1,9 +1,10 @@
 use std::collections::HashMap;
+use bimap::BiBTreeMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Strg {
     pub strings: Vec<String>,
-    pub locations: HashMap<u32, usize>,
+    pub locations: BiBTreeMap<u32, usize>,
 }
 
 use nom::{IResult, multi::count};
@@ -37,7 +38,7 @@ impl super::ParseSection for Strg {
         let locations = offsets.iter()
             .enumerate()
             .map(|(a,b)| (b + 4, a))
-            .collect::<HashMap<u32, usize>>();
+            .collect::<BiBTreeMap<u32, usize>>();
 
         Ok((input, Strg {
             strings, locations
@@ -47,6 +48,6 @@ impl super::ParseSection for Strg {
 
 impl Strg {
     pub fn get(&self, loc: u32) -> Option<&String> {
-        Some(&self.strings[*self.locations.get(&loc)?])
+        Some(&self.strings[*self.locations.get_by_left(&loc)?])
     }
 }

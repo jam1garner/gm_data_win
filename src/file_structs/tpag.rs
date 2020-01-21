@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Tpag {
     pub texture_pages: Vec<TpagEntry>,
     pub locations: HashMap<u32, usize>,
@@ -46,7 +46,7 @@ impl super::ParseSection for Tpag {
 type Rect16 = (Point16, Point16);
 type Point16 = (u16, u16);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TpagEntry {
     pub sprite_bounds: Rect16,
     pub unk2: Rect16,

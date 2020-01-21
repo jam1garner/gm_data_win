@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Txtr {
+    pub offset: usize,
     pub files: Vec<TxtrEntry>,
     pub locations: HashMap<u32, usize>,
 }
@@ -9,7 +10,7 @@ pub struct Txtr {
 use std::iter;
 use nom::{IResult, multi::count, sequence::tuple};
 use super::PosSlice;
-use super::byte_parsers::{le_u32};
+use super::byte_parsers::le_u32;
 
 fn get_txtr_entry_at_offset(input: PosSlice, offset: u32) -> IResult<PosSlice, (u32, u32, u32)> {
     let off = (offset as usize) - input.pos();
@@ -20,6 +21,8 @@ fn get_txtr_entry_at_offset(input: PosSlice, offset: u32) -> IResult<PosSlice, (
 
 impl super::ParseSection for Txtr {
     fn take(input: PosSlice) -> IResult<PosSlice, Self> {
+        let offset = input.pos() - 8;
+        let size = input.len();
         let (input, index_count) = le_u32(input)?;
         let (input, offsets) = count(le_u32, index_count as _)(input)?;
 
@@ -60,7 +63,7 @@ impl super::ParseSection for Txtr {
             .collect::<HashMap<u32, usize>>();
 
         Ok((input, Self {
-            files, locations
+            offset, files, locations
         }))
     }
 }
