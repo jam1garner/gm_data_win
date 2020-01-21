@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct Audo {
+    pub offset: u32,
     pub files: Vec<Vec<u8>>,
     pub locations: HashMap<u32, usize>,
 }
@@ -19,6 +20,7 @@ fn get_sond_entry_at_offset(input: PosSlice, offset: u32) -> IResult<PosSlice, V
 
 impl super::ParseSection for Audo {
     fn take(input: PosSlice) -> IResult<PosSlice, Self> {
+        let offset = input.pos() as u32 - 8;
         let (input, index_count) = le_u32(input)?;
         let (input, offsets) = count(le_u32, index_count as _)(input)?;
 
@@ -38,7 +40,7 @@ impl super::ParseSection for Audo {
             .collect::<HashMap<u32, usize>>();
 
         Ok((input, Self {
-            files, locations
+            offset, files, locations
         }))
     }
 }
