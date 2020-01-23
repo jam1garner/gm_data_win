@@ -83,13 +83,13 @@ fn main() {
     }
 
     if args.extract_textures {
+        let textures_folder = format!("{}/textures", args.originals_folder);
         let txtr = file.txtr.as_ref().unwrap();
-        let textures_folder = format!("{}/sprites", args.originals_folder);
         let _ = fs::create_dir_all(&textures_folder);
         let textures = txtr.files.iter().enumerate().collect::<Vec<_>>();
         textures.par_iter().for_each(|(i, texture)| {
             let _ = std::fs::write(
-                &format!("{}/{}_{}.png", textures_folder, i, texture.unk1),
+                &format!("{}/{}.png", textures_folder, i),
                 &texture.png
             );
         });
@@ -148,6 +148,30 @@ fn main() {
                     .open(&args.data_win)
                     .unwrap();
 
+    if args.mod_textures {
+        let textures_folder = format!("{}/textures", args.mod_folder);
+        if let Ok(texture_dir) = fs::read_dir(&textures_folder) {
+            let texture_dir = texture_dir.collect::<Result<Vec<_>, _>>().unwrap();
+            let textures = texture_dir.par_iter().filter_map(|texture| {
+                let texture_path = texture.path();
+                if !texture_path.is_dir() {
+                    let tex_num: usize = texture_path.file_stem()?.to_str()?.parse().ok()?;
+                    let data = fs::read(texture.path()).ok()?;
+                    Some((tex_num, data))
+                } else {
+                    None
+                }
+            }).collect::<Vec<_>>();
+            
+            if let Some(&mut Txtr { ref mut files, .. }) = file.txtr.as_mut() {
+                for (i, data) in textures {
+                    files[i].png = data;
+                }
+            }
+        }
+    }
+
+    // TODO: seperate texture writing from sprite modifying
     if args.mod_sprites {
         let sprites_folder = format!("{}/sprites", args.mod_folder);
 
@@ -240,11 +264,11 @@ fn main() {
                     );
             }
 
-            if let FormFile { txtr: Some(Txtr { ref offset, ref files, .. }), .. } = file {
-                let new_files: Vec<_> = files
+            if let Some(&mut Txtr { ref mut files, .. }) = file.txtr.as_mut() {
+                *files = files
                     .into_par_iter()
                     .enumerate()
-                    .map(|(i, &TxtrEntry { unk1, unk2, ref png })|{
+                    .map(|(i, &mut TxtrEntry { unk1, unk2, ref png })|{
                         let png = textures_to_edit
                             .get(&i)
                             .map(|texture| {
@@ -258,33 +282,37 @@ fn main() {
                         }
                     })
                     .collect();
-
-                let loc = f.seek(SeekFrom::Start((offset + 0xC + (4 * new_files.len())) as u64)).unwrap();
-                let mut file_pos = (loc as usize + (0xC * new_files.len())) as u32;
-                for &TxtrEntry { ref unk1, ref unk2, ref png } in &new_files {
-                    f.write(&unk1.to_le_bytes()).unwrap();
-                    f.write(&unk2.to_le_bytes()).unwrap();
-                    f.write(&file_pos.to_le_bytes()).unwrap();
-                    file_pos += png.len() as u32;
-                }
-                for TxtrEntry { png, .. } in new_files {
-                    f.write(&png).unwrap();
-                }
-                let padding = ((file_pos + 0x1f) & !0x1f) - file_pos;
-                // Rewrite TXTR size
-                let loc = f.seek(SeekFrom::Start((offset + 4) as u64)).unwrap() as u32;
-                f.write(&((file_pos + padding) - (loc + 4)).to_le_bytes()).unwrap();
-                // Write TXTR padding
-                f.seek(SeekFrom::Start(file_pos as u64)).unwrap() as u32;
-                f.write(&vec![0; padding as usize]).unwrap();
             }
+
         }
 
-    } /*else if args.mod_textures {
-        todo!()
     }
+    
+    if args.mod_sprites | args.mod_textures {
+        if let FormFile { txtr: Some(Txtr { ref offset, ref files, .. }), .. } = file {
 
-    if args.mod_fonts {
+            let loc = f.seek(SeekFrom::Start((offset + 0xC + (4 * files.len())) as u64)).unwrap();
+            let mut file_pos = (loc as usize + (0xC * files.len())) as u32;
+            for &TxtrEntry { ref unk1, ref unk2, ref png } in files {
+                f.write(&unk1.to_le_bytes()).unwrap();
+                f.write(&unk2.to_le_bytes()).unwrap();
+                f.write(&file_pos.to_le_bytes()).unwrap();
+                file_pos += png.len() as u32;
+            }
+            for TxtrEntry { png, .. } in files {
+                f.write(&png).unwrap();
+            }
+            let padding = ((file_pos + 0x1f) & !0x1f) - file_pos;
+            // Rewrite TXTR size
+            let loc = f.seek(SeekFrom::Start((offset + 4) as u64)).unwrap() as u32;
+            f.write(&((file_pos + padding) - (loc + 4)).to_le_bytes()).unwrap();
+            // Write TXTR padding
+            f.seek(SeekFrom::Start(file_pos as u64)).unwrap() as u32;
+            f.write(&vec![0; padding as usize]).unwrap();
+        }
+    }
+    
+    /*if args.mod_fonts {
         todo!()
     }*/
 
@@ -325,7 +353,7 @@ fn main() {
                 audio.seek(SeekFrom::Start(4)).unwrap();
                 audio.write(&(file_size as u32 - 8).to_le_bytes()).unwrap();
             }
-            if !args.mod_sprites {
+            if !args.mod_sprites | args.mod_textures {
                 f.seek(SeekFrom::Start(file.audos[0].offset as u64)).unwrap();
             }
         }
@@ -386,8 +414,8 @@ struct Args {
     //#[structopt(short = "F", long)]
     //mod_fonts: bool,
 
-    //#[structopt(short = "T", long)]
-    //mod_textures: bool,
+    #[structopt(short = "T", long)]
+    mod_textures: bool,
 
     #[structopt(short, long, long, default_value = "mods")]
     mod_folder: String,
