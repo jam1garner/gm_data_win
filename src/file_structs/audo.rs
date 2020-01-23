@@ -66,7 +66,7 @@ impl Audo {
         f.write_all(&count.to_le_bytes())?;
         pos += 0xC + (4 * count);
         let padding_amounts: Vec<_> = self.files.iter().map(|file|{
-            f.write_all(&pos.to_le_bytes());
+            f.write_all(&pos.to_le_bytes()).unwrap();
             let file_size = file.len() as u32;
             pos += ((file_size + 3) & !3) + 4;
             (((file_size + 3) & !3) - file_size) as usize

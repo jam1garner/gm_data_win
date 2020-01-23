@@ -42,9 +42,7 @@ use std::iter::{
 };
 
 use nom::{
-    InputIter,
     InputTake,
-    InputTakeAtPosition,
     InputLength,
 };
 

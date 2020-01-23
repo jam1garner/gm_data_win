@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use bimap::BiBTreeMap;
 
 #[derive(Debug, Clone)]

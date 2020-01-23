@@ -6,8 +6,7 @@ pub struct Font {
     pub locations: HashMap<u32, usize>,
 }
 
-use std::iter;
-use nom::{IResult, multi::{count, length_value}, sequence::tuple};
+use nom::{IResult, multi::count, sequence::tuple};
 use super::PosSlice;
 use super::byte_parsers::{le_u32, le_f32, le_u16};
 

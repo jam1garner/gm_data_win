@@ -22,7 +22,6 @@ fn get_txtr_entry_at_offset(input: PosSlice, offset: u32) -> IResult<PosSlice, (
 impl super::ParseSection for Txtr {
     fn take(input: PosSlice) -> IResult<PosSlice, Self> {
         let offset = input.pos() - 8;
-        let size = input.len();
         let (input, index_count) = le_u32(input)?;
         let (input, offsets) = count(le_u32, index_count as _)(input)?;
 

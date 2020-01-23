@@ -32,9 +32,10 @@ fn main() {
     ]);
 
     if !args.extract_sprites && !args.extract_textures && !args.extract_fonts &&
-        !args.extract_audio && !args.mod_sprites && !args.mod_audio {
+        !args.extract_audio && !args.mod_sprites && !args.mod_audio && !args.mod_textures {
         args.mod_audio = true;
         args.mod_sprites = true;
+        args.mod_textures = true;
     }
 
     let files: Vec<Vec<u8>> = iter::once(&args.data_win)
