@@ -15,6 +15,7 @@ use section_header::{take_section, ParseSection};
 use nom::IResult;
 use track_slice::PosSlice;
 use byte_parsers::le_u32;
+use std::path::Path;
 
 macro_rules! define_sections {
     ($enum_name:ident,
@@ -144,6 +145,11 @@ pub struct FormFile {
 }
 
 impl FormFile {
+    pub fn from_file<P: AsRef<Path>>(path: P) -> Self {
+        let data = std::fs::read(path.as_ref()).unwrap();
+        FormFile::from_sections(take_data_win_file(&data))
+    }
+
     pub fn from_sections(sections: Vec<Section>) -> Self {
         let mut file = FormFile::default();
 
