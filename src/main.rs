@@ -187,14 +187,15 @@ fn main() {
                         .unwrap()
                         .par_iter()
                         .map(|frame|{
-                            let filename = frame.file_name();
-                            let filename = filename.to_str().unwrap();
+                            let filename = frame.path();
+                            let filename = filename.file_stem().unwrap().to_str().unwrap();
                             let frame_num: usize = filename.parse()
                                 .unwrap_or_else(|_| -> usize {
-                                    filename[anim_name.len() + 1..filename.len() - 4].parse()
+                                    filename[anim_name.len() + 1..].parse()
                                         .unwrap_or_else(|_| panic!(
-                                            "Invalid filename: '{:?}', use format [num].png",
-                                            frame.path()
+                                            "Invalid filename: '{:?}' ('{}'), use format [num].png",
+                                            frame.path(),
+                                            &filename[anim_name.len()+1..]
                                         ))
                                 });
                                 
