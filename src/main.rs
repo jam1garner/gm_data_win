@@ -270,7 +270,7 @@ fn main() {
                 *files = files
                     .into_par_iter()
                     .enumerate()
-                    .map(|(i, &mut TxtrEntry { unk1, unk2, ref png })|{
+                    .map(|(i, &mut TxtrEntry { unk1, /*unk2,*/ ref png })|{
                         let png = textures_to_edit
                             .get(&i)
                             .map(|texture| {
@@ -280,7 +280,7 @@ fn main() {
                             })
                             .unwrap_or_else(|| remove_padding(png.clone()));
                         TxtrEntry {
-                            unk1, unk2, png
+                            unk1, /*unk2,*/ png
                         }
                     })
                     .collect();
@@ -295,9 +295,9 @@ fn main() {
 
             let loc = f.seek(SeekFrom::Start((offset + 0xC + (4 * files.len())) as u64)).unwrap();
             let mut file_pos = (loc as usize + (0xC * files.len())) as u32;
-            for &TxtrEntry { ref unk1, ref unk2, ref png } in files {
+            for &TxtrEntry { ref unk1, /*ref unk2,*/ ref png } in files {
                 f.write(&unk1.to_le_bytes()).unwrap();
-                f.write(&unk2.to_le_bytes()).unwrap();
+                //f.write(&unk2.to_le_bytes()).unwrap();
                 f.write(&file_pos.to_le_bytes()).unwrap();
                 file_pos += png.len() as u32;
             }

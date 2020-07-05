@@ -12,11 +12,11 @@ use nom::{IResult, multi::count, sequence::tuple};
 use super::PosSlice;
 use super::byte_parsers::le_u32;
 
-fn get_txtr_entry_at_offset(input: PosSlice, offset: u32) -> IResult<PosSlice, (u32, u32, u32)> {
+fn get_txtr_entry_at_offset(input: PosSlice, offset: u32) -> IResult<PosSlice, (u32, u32)> {
     let off = (offset as usize) - input.pos();
     let input = input.offset(off);
 
-    tuple((le_u32, le_u32, le_u32))(input)
+    tuple((le_u32, le_u32))(input)
 }
 
 impl super::ParseSection for Txtr {
@@ -37,7 +37,7 @@ impl super::ParseSection for Txtr {
 
         let pos = input.pos();
         let png_offsets = files.iter()
-            .map(|a| a.2 as usize - pos)
+            .map(|a| a.1 as usize - pos)
             .chain(iter::once(input.len()))
             .collect::<Vec<_>>();
 
@@ -49,9 +49,9 @@ impl super::ParseSection for Txtr {
         
         let files = files.into_iter()
             .zip(pngs.into_iter())
-            .map(|((unk1, unk2, _), png)| {
+            .map(|((unk1, _), png)| {
                 TxtrEntry {
-                    unk1, unk2, png
+                    unk1, png
                 }
             })
             .collect::<Vec<_>>();
@@ -76,6 +76,6 @@ impl Txtr {
 #[derive(Debug, Clone)]
 pub struct TxtrEntry {
     pub unk1: u32, // either 0 or 1
-    pub unk2: u32, // always 0
+    //pub unk2: u32, // always 0
     pub png: Vec<u8>,
 }
