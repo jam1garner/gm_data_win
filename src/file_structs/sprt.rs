@@ -58,7 +58,8 @@ pub struct SprtEntry {
     pub opacity_maybe: f32,
     pub unk5: u32,
     pub tpag_offsets: Vec<u32>,
-    pub transparencies: Vec<Vec<u8>>,
+    //pub transparencies: Vec<Vec<u8>>,
+    pub unk_floats: Vec<f32>,
 }
 
 pub fn take_point32(input: PosSlice) -> IResult<PosSlice, Point32> {
@@ -75,13 +76,11 @@ impl SprtEntry {
             name_offset,
             size,
             bounds,
-            _,
+            _unk6,
             origin,
             unk3,
-            _,
-            opacity_maybe,
-            unk5,
-            frame_count,
+            _unk7,
+            some_float_count,
         )) = tuple((
             le_u32,
             take_point32,
@@ -89,20 +88,36 @@ impl SprtEntry {
             count(le_u32, 5),
             take_point32,
             le_u32,
-            count(le_u32, 2),
+            le_u32,
+            le_u32,
+        ))(input)?;
+
+        let (input, unk_floats) = count(le_f32, some_float_count as _)(input)?;
+
+        let (input, (
+            opacity_maybe,
+            unk5,
+            frame_count,
+        ))= tuple((
             le_f32,
             le_u32,
             le_u32
         ))(input)?;
 
         let (input, tpag_offsets) = count(le_u32, frame_count as _)(input)?;
-        let (input, trans_count) = le_u32(input)?;
-        let data_size = (((size.0 * size.1) + 7) / 8) as usize;
-        let transparencies =
-            Vec::from(&input.1[..data_size * trans_count as usize])
-                .chunks(data_size)
-                .map(Vec::from)
-                .collect::<Vec<_>>();
+        //let (input, trans_count) = le_u32(input)?;
+        //let trans_count = trans_count & 0xffff;
+
+        //let data_size = (((size.0 * size.1) + 7) / 8) as usize;
+        //let transparencies =
+        //    if some_float_count == 0 {
+        //        Vec::from(&input.1[..data_size * trans_count as usize])
+        //            .chunks(data_size)
+        //            .map(Vec::from)
+        //            .collect::<Vec<_>>()
+        //    } else {
+        //        Vec::new()
+        //    };
 
         Ok((
             input,
@@ -115,7 +130,8 @@ impl SprtEntry {
                 opacity_maybe,
                 unk5,
                 tpag_offsets,
-                transparencies,
+                //transparencies,
+                unk_floats,
             }
         ))
     }

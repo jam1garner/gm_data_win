@@ -6,5 +6,6 @@
 /mods
 /files
 /target
+data.win
 **/*.rs.bk
 Cargo.lock

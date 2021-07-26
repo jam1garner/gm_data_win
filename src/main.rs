@@ -25,10 +25,10 @@ fn main() {
     let mut args = Args::from_args();
 
     args.audio_groups.get_or_insert_with(|| vec![
-        "audiogroup1.dat".into(),
-        "audiogroup2.dat".into(),
-        "audiogroup3.dat".into(),
-        "audiogroup4.dat".into(),
+        //"audiogroup1.dat".into(),
+        //"audiogroup2.dat".into(),
+        //"audiogroup3.dat".into(),
+        //"audiogroup4.dat".into(),
     ]);
 
     if !args.extract_sprites && !args.extract_textures && !args.extract_fonts &&
@@ -239,7 +239,7 @@ fn main() {
                                         &txtr.files[texture_num].png,
                                         image::ImageFormat::PNG
                                     ).unwrap_or_else(|_| {
-                                        panic!("Texture {} failed to load.", )
+                                        panic!("Texture {} failed to load.", texture_num)
                                     });
                     
                     (texture_num, texture)
