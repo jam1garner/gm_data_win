@@ -451,7 +451,7 @@ impl Default for Args {
             mod_folder: String::from("mods"),
             originals_folder: String::from("files"),
             data_win: String::from("data.win"),
-            audio_groups: Some(Vec::from([])),
+            audio_groups: None,
         }
     }
 }
