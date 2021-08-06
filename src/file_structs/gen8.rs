@@ -1,7 +1,7 @@
 #[derive(Debug, Clone)]
 pub struct Gen8 {
-    window_size: (u32, u32),
-    game_name_offset: u32,
+    pub window_size: (u32, u32),
+    pub game_name_offset: u32,
 }
 
 use nom::{IResult, sequence::tuple};
