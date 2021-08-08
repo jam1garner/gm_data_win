@@ -45,22 +45,92 @@ impl super::ParseSection for Room {
 
 type Rect32 = (Point32, Point32);
 type Point32 = (u32, u32);
+type Bool32 = (u32);
 
 #[derive(Debug, Clone)]
-pub struct RoomEntry {
+pub struct Backgrounds {
+    pub enabled: Bool32,
+    pub foreground: Bool32,
+    pub bg_def_index: u32,
+    pub position: Point32,
+    pub tile_x: Bool32,
+    pub tile_y: Bool32,
+    pub speed_x: u32,
+    pub speed_y: u32,
+    pub object_id: i32,
+}
+
+#[derive(Debug, Clone)]
+pub struct Views {
+    pub enabled: Bool32,
+    pub view_x: i32,
+    pub view_y: i32,
+    pub port_x: i32,
+    pub port_y: i32,
+    pub port_width: i32,
+    pub port_height: i32,
+    pub border_x: u32,
+    pub border_y: i32,
+    pub speed_x: u32,
+    pub speed_y: u32,
+    pub object_id: i32,
+}
+
+#[derive(Debug, Clone)]
+pub struct GameObjects {
+    pub x: i32,
+    pub y: i32,
+    pub bg_def_index: i32,
+    pub instance_id: i32,
+    pub creation_code_id: i32,  // to CODE (-1 for none) -> gml_RoomCC_<name>_<CreationCodeID>
+    pub scale_x: f32,
+    pub scale_y: f32,
+    pub argb_tint: u32,
+    pub rotation: f32,
+}
+
+#[derive(Debug, Clone)]
+pub struct Tiles {
+    pub x: i32,
+    pub y: i32,
+    pub bg_def_index: i32,
+    pub source_x: i32,
+    pub source_y: i32,  
+    pub size: Point32,
+    pub tile_depth: i32,
+    pub instance_id: i32,
+    pub scale_x: f32,
+    pub scale_y: f32,
+    pub argb_tint: u32,
+}
+
+#[derive(Debug, Clone)]
+pub struct Room {
     pub name_offset: u32,
     pub caption_offset: u32,
     pub size: Point32,
-    pub bounds: Rect32,
-    //pub unk2: [u32; 5],
-    pub origin: Point32,
-    pub unk3: i32,
-    //pub unk4: [u32; 2],
-    pub opacity_maybe: f32,
-    pub unk5: u32,
-    pub tpag_offsets: Vec<u32>,
-    //pub transparencies: Vec<Vec<u8>>,
-    pub unk_floats: Vec<f32>,
+    pub speed: u32,
+    pub persistent: Bool32, //boolean
+    pub argb: u32,
+    pub draw_bg_color: Bool32, //boolean
+    pub _unk1: u32,
+    pub flags: u32, // Room Entry Flags (enableViews=1, ShowColor=2, ClearDisplayBuffer=4)
+    pub bg_offset: u32, //Offsets to the list<t> later
+    pub obj_offset: u32,
+    pub view_offset: u32,
+    pub tile_offset: u32,
+    pub world: u32,
+    pub top: u32,
+    pub left: u32,
+    pub right: u32,
+    pub bottom: u32,
+    pub gravity_x: f32,
+    pub gravity_y: f32,
+    pub meters_per_pixel: f32,
+    pub backgrounds: Vec<Backgrounds>,
+    pub views: Vec<Views>,
+    pub game_objects: Vec<GameObjects>,
+    pub tiles: Vec<Tiles>,
 }
 
 pub fn take_point32(input: PosSlice) -> IResult<PosSlice, Point32> {
