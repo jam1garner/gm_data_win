@@ -149,6 +149,23 @@ pub fn main(mut args: Args, wait_for_user: bool) {
 
     if args.extract_rooms {
         //extracting rooms
+        let strg = file.strg.as_ref().unwrap();
+        let room = file.room.as_ref().unwrap();
+        let rooms_folder = format!("{}/rooms", args.originals_folder);
+        let _ = fs::create_dir(&rooms_folder);
+        /*sprt.sprites.par_iter().for_each(|sprite| {
+            let name = strg.get(room.name_offset).unwrap();
+            println!("Saving '{}'...", name);
+            let _ = fs::create_dir_all(&format!("{}/{}", sprites_folder, name));
+            let tpags = sprite.tpag_offsets.iter().enumerate().collect::<Vec<_>>();
+            tpags.par_iter().for_each(|(i, &tpag)| {
+                file.get_tpag_subimage(tpag)
+                    .save_with_format(
+                        &format!("{}/{}/{}.png", sprites_folder, name, i),
+                        image::ImageFormat::PNG
+                    ).unwrap();
+            });
+        });*/
     }
 
     let mut f = fs::OpenOptions::new()
