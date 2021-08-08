@@ -105,7 +105,7 @@ pub struct Tiles {
 }
 
 #[derive(Debug, Clone)]
-pub struct Room {
+pub struct RoomEntry {
     pub name_offset: u32,
     pub caption_offset: u32,
     pub size: Point32,
@@ -145,23 +145,53 @@ impl RoomEntry {
     pub fn take(input: PosSlice) -> IResult<PosSlice, Self> {
         let (input, (
             name_offset,
+            caption_offset,
             size,
-            bounds,
-            _unk6,
-            origin,
-            unk3,
-            _unk7,
-            some_float_count,
+            speed,
+            persistent,
+            argb,
+            draw_bg_color,
+            _unk1,
+            flags,
+            bg_offset,
+            view_offset,
+            obj_offset,
+            tile_offset,
+            world,
+            top,
+            left,
+            right,
+            bottom,
+            gravity_x,
+            gravity_y,
+            meters_per_pixel,
+            background_count,
         )) = tuple((
-            le_u32,
-            take_point32,
-            take_rect32,
-            count(le_u32, 5),
-            take_point32,
-            le_u32,
-            le_u32,
-            le_u32,
+            le_u32,  //name_offset
+            le_u32, //caption_offset
+            take_point32,  //size
+            le_u32, //speed
+            le_bool, // persistent
+            le_u32, //argb
+            le_bool, //draw_bg_color
+            le_u32, //_unk1
+            le_u32, //flags
+            le_u32, //bg_offset
+            le_u32, //view_offset
+            le_u32,  //object_offset
+            le_u32,  //tile_offset
+            le_u32, //world
+            le_u32, //top
+            le_u32,  //left
+            le_u32,  // right
+            le_u32,  //bottom
+            le_f32,  //gravity_x
+            le_f32,  //gravity_y
+            le_f32,  //meters_per_pixel
+            le_u32, //backgroung_count
         ))(input)?;
+
+        //TODO:   read in background vectors then start reading the other vectors
 
         let (input, unk_floats) = count(le_f32, some_float_count as _)(input)?;
 
