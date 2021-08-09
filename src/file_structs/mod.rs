@@ -9,11 +9,15 @@ mod tpag;
 mod sprt;
 mod font;
 mod agrp;
+mod objt;
 mod byte_parsers;
+
+mod helpers;
 
 use section_header::{take_section, ParseSection};
 use nom::IResult;
 use track_slice::PosSlice;
+use helpers::{PosCursor, ptr_list};
 use byte_parsers::le_u32;
 use std::path::Path;
 
@@ -95,6 +99,7 @@ pub use tpag::*;
 pub use sprt::*;
 pub use font::*;
 pub use agrp::*;
+pub use objt::*;
 
 define_sections!{
     Section,
@@ -108,6 +113,7 @@ define_sections!{
         (b"SPRT", Sprt, Sprt, _sprt),
         (b"FONT", Font, Font, _font),
         (b"AGRP", Agrp, Agrp, _agrp),
+        (b"OBJT", Objt, Objt, _objt),
     }
 }
 
