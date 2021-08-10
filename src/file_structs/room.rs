@@ -1,4 +1,4 @@
-use binrw::{derive_binread, BinRead, BinReaderExt};
+use binrw::{derive_binread, BinRead, BinReaderExt, io::SeekFrom};
 use nom::{IResult, error::ErrorKind};
 use super::{PosSlice, PosCursor, ptr_list};
 
@@ -20,7 +20,8 @@ pub struct Room {
     pub entries: Vec<RoomEntry>,
 }
 
-#[derive(BinRead, Debug, Clone)]
+#[derive_binread]
+#[derive(Debug, Clone)]
 pub struct RoomEntry {
     pub name_offset: u32,
     pub caption_offset: u32,
@@ -34,10 +35,19 @@ pub struct RoomEntry {
     pub draw_bg_color: bool, //boolean
     pub _unk1: u32,
     pub flags: u32, // Room Entry Flags (enableViews=1, ShowColor=2, ClearDisplayBuffer=4)
-    pub bg_offset: u32, //Offsets to the list<t> later
-    pub obj_offset: u32,
-    pub view_offset: u32,
-    pub tile_offset: u32,
+
+    #[br(temp)]
+    pub bgs_offset: u32, //Offsets to the list<t> later
+
+    #[br(temp)]
+    pub views_offset: u32,
+
+    #[br(temp)]
+    pub objs_offset: u32,
+
+    #[br(temp)]
+    pub tiles_offset: u32,
+
     pub world: u32,
     pub top: u32,
     pub left: u32,
@@ -46,19 +56,47 @@ pub struct RoomEntry {
     pub gravity_x: f32,
     pub gravity_y: f32,
     pub meters_per_pixel: f32,
-    #[br(parse_with = ptr_list)]
-    pub backgrounds: Vec<Backgrounds>,
-    #[br(parse_with = ptr_list)]
-    pub views: Vec<Views>,
-    #[br(parse_with = ptr_list)]
-    pub game_objects: Vec<GameObjects>,
-    #[br(parse_with = ptr_list)]
-    pub tiles: Vec<Tiles>,
+
+    #[br(temp)]
+    pub unk_pointer: u32,
+
+    //#[br(temp)]
+    pub unk_pointer2: u32,
+
+    #[br(seek_before = SeekFrom::Start(bgs_offset as u64), parse_with = ptr_list)]
+    pub backgrounds: Vec<Background>,
+
+    #[br(seek_before = SeekFrom::Start(views_offset as u64), parse_with = ptr_list)]
+    pub views: Vec<View>,
+
+    #[br(seek_before = SeekFrom::Start(objs_offset as u64), parse_with = ptr_list)]
+    pub game_objects: Vec<GameObject>,
+
+    #[br(seek_before = SeekFrom::Start(tiles_offset as u64), parse_with = ptr_list)]
+    pub tiles: Vec<Tile>,
+
+    #[br(seek_before = SeekFrom::Start(unk_pointer as u64), parse_with = ptr_list)]
+    pub unk: Vec<Unk>,
+
+    //#[br(seek_before = SeekFrom::Start(unk_pointer2 as u64), parse_with = ptr_list)]
+    //pub unk2: Vec<Unk2>,
 }
 
 #[derive_binread]
 #[derive(Debug, Clone)]
-pub struct Backgrounds {
+pub struct Unk {
+    pub name_offset: u32,
+    pub unks: [u32; 9]
+}
+
+//#[derive_binread]
+//#[derive(Debug, Clone)]
+//pub struct Unk2 {
+//}
+
+#[derive_binread]
+#[derive(Debug, Clone)]
+pub struct Background {
     #[br(map = gm_bool)]
     pub enabled: bool,
     #[br(map = gm_bool)]
@@ -77,7 +115,7 @@ pub struct Backgrounds {
 
 #[derive_binread]
 #[derive(Debug, Clone)]
-pub struct Views {
+pub struct View {
     #[br(map = gm_bool)]
     pub enabled: bool,
     pub view_x: i32,
@@ -95,7 +133,7 @@ pub struct Views {
 
 #[derive_binread]
 #[derive(Debug, Clone)]
-pub struct GameObjects {
+pub struct GameObject {
     pub x: i32,
     pub y: i32,
     pub bg_def_index: i32,
@@ -109,7 +147,7 @@ pub struct GameObjects {
 
 #[derive_binread]
 #[derive(Debug, Clone)]
-pub struct Tiles {
+pub struct Tile {
     pub x: i32,
     pub y: i32,
     pub bg_def_index: i32,
