@@ -10,6 +10,7 @@ mod sprt;
 mod font;
 mod agrp;
 mod objt;
+mod room;
 mod byte_parsers;
 
 mod helpers;
@@ -100,6 +101,7 @@ pub use sprt::*;
 pub use font::*;
 pub use agrp::*;
 pub use objt::*;
+pub use room::*;
 
 define_sections!{
     Section,
@@ -114,6 +116,7 @@ define_sections!{
         (b"FONT", Font, Font, _font),
         (b"AGRP", Agrp, Agrp, _agrp),
         (b"OBJT", Objt, Objt, _objt),
+        (b"ROOM", Room, Room, _room),
     }
 }
 
