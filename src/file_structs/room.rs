@@ -58,7 +58,7 @@ pub struct RoomEntry {
     pub meters_per_pixel: f32,
 
     #[br(temp)]
-    pub unk_pointer: u32,
+    pub layers_offset: u32,
 
     //#[br(temp)]
     pub unk_pointer2: u32,
@@ -75,24 +75,86 @@ pub struct RoomEntry {
     #[br(seek_before = SeekFrom::Start(tiles_offset as u64), parse_with = ptr_list)]
     pub tiles: Vec<Tile>,
 
-    #[br(seek_before = SeekFrom::Start(unk_pointer as u64), parse_with = ptr_list)]
-    pub unk: Vec<Unk>,
+    #[br(seek_before = SeekFrom::Start(layers_offset as u64), parse_with = ptr_list)]
+    pub layers: Vec<Layer>,
 
-    //#[br(seek_before = SeekFrom::Start(unk_pointer2 as u64), parse_with = ptr_list)]
-    //pub unk2: Vec<Unk2>,
+    #[br(
+        if(unk_pointer2 != 0),
+        seek_before = SeekFrom::Start(unk_pointer2 as u64),
+        parse_with = ptr_list
+    )]
+    pub unk2: Vec<binrw::PosValue<Unk2>>,
+
+    #[br(calc = unk_pointer2 != 0)]
+    pub has_unk2: bool,
 }
 
 #[derive_binread]
 #[derive(Debug, Clone)]
-pub struct Unk {
+pub struct Layer {
     pub name_offset: u32,
-    pub unks: [u32; 9]
+    pub index: u32,
+    pub kind: LayerKind,
 }
 
-//#[derive_binread]
-//#[derive(Debug, Clone)]
-//pub struct Unk2 {
-//}
+#[derive_binread]
+#[derive(Debug, Clone)]
+pub enum LayerKind {
+    #[br(magic = 1u32)]
+    Background {
+        depth: i32,
+        x_offset: f32,
+        y_offset: f32,
+        horizontal_speed: f32,
+        vertical_speed: f32,
+        unk: u32, // 1
+        unk2: u32, // 1
+        unk3: u32, // 0
+        sprite_index: i32, 
+
+        #[br(map = gm_bool)]
+        horizontal_tile: bool,
+
+        #[br(map = gm_bool)]
+        vertical_tile: bool,
+
+        #[br(map = gm_bool)]
+        stretch: bool,
+
+        color: RgbaColor,
+        unk4: u32,
+        animation_speed: f32,
+        animation_speed_unit: SpeedUnit,
+    },
+
+    #[br(magic = 2u32)]
+    Instance {
+        depth: i32,
+        x_offset: f32,
+        y_offset: f32,
+        horizontal_speed: f32,
+        vertical_speed: f32,
+        unk: u32, // 1
+        unk2: u32, // 1
+    },
+
+    #[br(magic = 3u32)]
+    Tile {
+        depth: i32,
+
+    },
+
+    #[br(magic = 4u32)]
+    Path {
+        depth: i32,
+
+    },
+}
+
+#[derive_binread]
+#[derive(Debug, Clone)]
+pub struct Unk2 {
+}
 
 #[derive_binread]
 #[derive(Debug, Clone)]
@@ -141,8 +203,11 @@ pub struct GameObject {
     pub creation_code_id: i32,
     pub scale_x: f32,
     pub scale_y: f32,
-    pub argb_tint: u32,
+    pub image_speed: f32,
+    pub frame: u32,
+    pub color: RgbaColor,
     pub rotation: f32,
+    pub vari_index: i32,
 }
 
 #[derive_binread]
@@ -160,6 +225,23 @@ pub struct Tile {
     pub scale_x: f32,
     pub scale_y: f32,
     pub argb_tint: u32,
+}
+
+#[derive_binread]
+#[derive(Debug, Clone)]
+pub struct RgbaColor {
+    r: u8,
+    g: u8,
+    b: u8,
+    a: u8
+}
+
+#[derive_binread]
+#[derive(Debug, Clone)]
+#[br(repr(u32))]
+pub enum SpeedUnit {
+    FramesPerSecond = 0,
+    FramesPerGameFrame = 1,
 }
 
 fn gm_bool(var: u32) -> bool {
