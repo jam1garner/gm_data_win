@@ -147,27 +147,6 @@ pub fn main(mut args: Args, wait_for_user: bool) {
         }
     }
 
-    if args.extract_rooms {
-        //extracting rooms
-        let strg = file.strg.as_ref().unwrap();
-        let room = file.room.as_ref().unwrap();
-        let rooms_folder = format!("{}/rooms", args.originals_folder);
-        let _ = fs::create_dir(&rooms_folder);
-        room.rooms.par_iter().for_each(|room_instance| {
-            let name = strg.get(room.name_offset).unwrap();
-            println!("Saving '{}'...", name);
-            let _ = fs::create_dir_all(&format!("{}/{}", rooms_folder, name));
-            //let tpags = sprite.tpag_offsets.iter().enumerate().collect::<Vec<_>>();
-            //tpags.par_iter().for_each(|(i, &tpag)| {
-            //    file.get_tpag_subimage(tpag)
-            //        .save_with_format(
-            //            &format!("{}/{}/{}.png", sprites_folder, name, i),
-            //            image::ImageFormat::PNG
-            //        ).unwrap();
-            //});
-        });
-    }
-
     let mut f = fs::OpenOptions::new()
                     .read(true)
                     .write(true)
@@ -398,10 +377,6 @@ pub fn main(mut args: Args, wait_for_user: bool) {
         f.set_len(form_size as u64 + 8).unwrap();
     }
 
-    if args.mod_rooms {
-        //extracting rooms
-    }
-
     if wait_for_user {
         let mut stdout = std::io::stdout();
         stdout.write(b"Press Enter to continue...").unwrap();
@@ -438,9 +413,6 @@ pub struct Args {
     #[structopt(short = "t", long)]
     pub extract_textures: bool,
 
-    #[structopt(short = "r", long)]
-    pub extract_rooms: bool,
-
     #[structopt(short = "A", long)]
     pub mod_audio: bool,
 
@@ -452,9 +424,6 @@ pub struct Args {
 
     #[structopt(short = "T", long)]
     pub mod_textures: bool,
-
-    #[structopt(short = "R", long)]
-    pub mod_rooms: bool,
 
     #[structopt(short, long, long, default_value = "mods")]
     pub mod_folder: String,
@@ -476,11 +445,9 @@ impl Default for Args {
             extract_sprites: false,
             extract_fonts: false,
             extract_textures: false,
-            extract_rooms: false,
             mod_audio: false,
             mod_sprites: false,
             mod_textures: false,
-            mod_rooms: false,
             mod_folder: String::from("mods"),
             originals_folder: String::from("files"),
             data_win: String::from("data.win"),

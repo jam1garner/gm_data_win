@@ -7,8 +7,6 @@ use nom::IResult;
 use nom::error::*;
 use nom::Err;
 
-//TODO:   define le_bool( )
-
 pub fn le_u32(i: PosSlice) -> IResult<PosSlice, u32> {
     let input = i.1;
     nom_impl::le_u32(input)
