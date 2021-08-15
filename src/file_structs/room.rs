@@ -6,7 +6,7 @@ impl super::ParseSection for Room {
     fn take(input: PosSlice) -> IResult<PosSlice, Self> {
         let mut cursor = PosCursor::from(input.clone());
 
-        if let Ok(room) = dbg!(cursor.read_le()) {
+        if let Ok(room) = cursor.read_le() {
             Ok((input, room))
         } else {
             Err(nom::Err::Error((input, ErrorKind::ParseTo)))
