@@ -1,4 +1,4 @@
-use binrw::{derive_binread, BinRead, BinReaderExt};
+use binrw::{derive_binread, BinReaderExt};
 use nom::{IResult, error::ErrorKind};
 use super::{PosSlice, PosCursor};
 use modular_bitfield::prelude::*;
@@ -90,7 +90,6 @@ impl super::ParseSection for Gen8 {
         let mut cursor = PosCursor::from(input.clone());
 
         if let Ok(gen8) = cursor.read_le() {
-            dbg!(&gen8);
             Ok((input, gen8))
         } else {
             Err(nom::Err::Error((input, ErrorKind::ParseTo)))
