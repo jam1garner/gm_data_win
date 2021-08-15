@@ -1,10 +1,11 @@
 use binrw::{derive_binread, BinRead, BinReaderExt};
 use nom::{IResult, error::ErrorKind};
-use super::{PosSlice, PosCursor, ptr_list};
+use super::{PosSlice, PosCursor};
 use modular_bitfield::prelude::*;
 use chrono::naive::NaiveDateTime;
 
-#[derive(BinRead, Debug, Clone)]
+#[derive_binread]
+#[derive(Debug, Clone)]
 pub struct Gen8 {
     pub unk: u32,
     pub internal_name_offset: u32,
@@ -24,6 +25,23 @@ pub struct Gen8 {
 
     #[br(map = |time: u64| NaiveDateTime::from_timestamp(time as i64, 0))]
     pub build_time: NaiveDateTime,
+
+    // display name
+    pub game_name_offset: u32,
+    pub unk12: u32,
+    pub unk13: u32,
+
+    // more crcs?
+    pub unk14: [u32; 3],
+    pub server_port: u32,
+
+    #[br(temp)]
+    pub number_count: u32,
+
+    #[br(count = number_count)]
+    pub numbers: Vec<u32>, // ????
+
+    pub nonsense: [u8; 0x40],
 }
 
 // 0x0001 - start fullscreen
